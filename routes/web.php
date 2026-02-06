@@ -9,6 +9,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Employee Routes 
 Route::middleware([Authenticate::class])->group(function () {
     Route::get('employees', [EmployeeController::class, 'create'])->name('addEmployee');
     Route::post('employees', [EmployeeController::class, 'store_employee'])->name('storeEmployee');
@@ -18,8 +19,11 @@ Route::middleware([Authenticate::class])->group(function () {
     Route::post('/employees/update', [EmployeeController::class, 'update_employee'])->name('employees.update');
     Route::post('/employees/search', [EmployeeController::class, 'search'])->name('employees.search');
 });
+
+// Register Routes
 Route::get('/register', [UserController::class, 'register_view'])->name('register');
 Route::post('/register', [UserController::class, 'saveregistration'])->name('saveregistration');
 
+// Login Routes
 Route::get('/login', [UserController::class, 'login_view'])->name('login');
 Route::post('/login', [UserController::class, 'login'])->name('loginRedirect');
