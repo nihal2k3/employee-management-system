@@ -52,7 +52,7 @@ class EmployeeController extends Controller
             'status',
             'created_at',
             'updated_at'
-        )->get();
+        )->paginate(1);
 
         return response()->json($employees);
     }

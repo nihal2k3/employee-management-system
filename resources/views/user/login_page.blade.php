@@ -76,7 +76,7 @@
                 return false;
             }
             $.ajax({
-                url: "{{ route('saveLogin') }}",
+                url: "{{ route('loginRedirect') }}",
                 type: "POST",
                 data: $(this).serialize(),
                 headers: {

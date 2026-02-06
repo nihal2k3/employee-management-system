@@ -49,6 +49,9 @@
             </tbody>
         </table>
 
+        <nav>
+            <ul class="pagination justify-content-end" id="paginationLinks"></ul>
+        </nav>
     </div>
 
 
@@ -196,7 +199,7 @@
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-    <!-- Bootstrap 5 JS -->
+    <!---------------------- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
@@ -206,8 +209,8 @@
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             }
         });
-
-        loadEmployees();
+        let baseUrl = "{{ route('employees.list') }}";
+        loadEmployees(baseUrl);
         $("#employeeForm").submit(function(e) {
             e.preventDefault();
             $('#email_error').text('');
@@ -241,7 +244,7 @@
                     if (response.status) {
                         $('#employeeModal').hide();
                         showSuccessMessage(response.message);
-                        loadEmployees();
+                        loadEmployees(baseUrl);
                     }
                 },
                 error: function(xhr) {
@@ -270,22 +273,23 @@
             });
         });
 
-        function loadEmployees() {
+        function loadEmployees(url) {
             $.ajax({
-                url: "{{ route('employees.list') }}",
+                url: url,
                 type: "GET",
-                success: function(data) {
+                success: function(res) {
                     let rows = '';
 
-                    if (data.length === 0) {
+                    let startIndex = (res.current_page - 1) * res.per_page;
+                    if (res.data.length === 0) {
                         rows = `<tr>
                                     <td colspan="9" align="center">No records found</td>
                                 </tr>`;
                     } else {
-                        $.each(data, function(index, emp) {
+                        $.each(res.data, function(index, emp) {
                             rows += `
                         <tr>
-                            <td>${index + 1}</td>
+                            <td>${startIndex + index + 1}</td>
                             <td>${emp.name}</td>
                             <td>${emp.email}</td>
                             <td>${emp.phone}</td>
@@ -308,12 +312,33 @@
                     }
 
                     $('#employeeData').html(rows);
+
+                    let pagination = '';
+
+                    $.each(res.links, function(index, link) {
+                        if (link.url !== null) {
+                            pagination += `
+                        <li class="page-item ${link.active ? 'active' : ''}">
+                            <a class="page-link" href="#" data-url="${link.url}">
+                                ${link.label}
+                            </a>
+                        </li>`;
+                        }
+                    });
+
+                    $('#paginationLinks').html(pagination);
                 },
                 error: function() {
-                    alert('Failed to load data');
+                    alert('Failed');
                 }
             });
         }
+
+        $(document).on('click', '.pagination a', function(e) {
+            e.preventDefault();
+            let url = $(this).data('url');
+            loadEmployees(url);
+        });
 
         $(document).on('click', '.deleteBtn', function() {
             let id = $(this).data('id');
@@ -329,7 +354,7 @@
                 success: function(response) {
                     if (response.status) {
                         showSuccessMessage(response.message);
-                        loadEmployees();
+                        loadEmployees(baseUrl);
                     } else {
                         showErrorMessage(response.message);
                     }
@@ -402,7 +427,7 @@
                     if (response.status) {
                         $('#editEmployeeModal').hide();
                         showSuccessMessage(response.message);
-                        loadEmployees();
+                        loadEmployees(baseUrl);
                     }
                 },
                 error: function(xhr) {
@@ -457,6 +482,17 @@
                         <td>${emp.phone}</td>
                         <td>${emp.salary}</td>
                         <td>${emp.status}</td>
+                        <td>
+                            <button class="btn btn-sm btn-primary editBtn"
+                                data-id="${emp.id}">
+                                Edit
+                            </button>
+
+                            <button class="btn btn-sm btn-danger deleteBtn"
+                                data-id="${emp.id}">
+                                Delete
+                            </button>
+                        </td>
                     </tr>
                 `;
                     });

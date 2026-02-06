@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -17,7 +19,7 @@ class UserController extends Controller
         return view('user.login_page');
     }
 
-    public function save_login(Request $req)
+    public function login(Request $req)
     {
         $data = $req->validate([
             'email' => 'required|email',
@@ -28,7 +30,7 @@ class UserController extends Controller
 
             return response()->json([
                 'status' => true,
-                'redirect' => route(''),
+                'redirect' => route('addEmployee'),
             ]);
         } else {
             return response()->json([
@@ -36,5 +38,34 @@ class UserController extends Controller
                 'message' => 'Invalid email or password'
             ]);
         }
+    }
+
+    public function saveregistration(Request $req)
+    {
+        $data = $req->validate([
+            'name' => 'required|max:20',
+            'email' => 'required|email',
+            'password' => 'required|min:3|confirmed'
+        ]);
+
+        $exist = User::where('email', $data['email'])->first();
+        if ($exist) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Email Already Exist'
+            ]);
+        }
+
+        User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Registration successful',
+            'redirect' => route('addEmployee')
+        ]);
     }
 }
